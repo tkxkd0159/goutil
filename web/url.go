@@ -1,6 +1,7 @@
 package web
 
 import (
+	"log"
 	"net/http"
 )
 
@@ -44,4 +45,10 @@ func CheckURLs(urls []string) map[string]resurl {
 	}
 
 	return ans
+}
+
+func CheckCode(res *http.Response) {
+	if res.StatusCode != 200 {
+		log.Printf("ERROR : %d %s\n", res.StatusCode, res.Status)
+	}
 }
