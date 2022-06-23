@@ -3,7 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/tkxkd0159/goutil"
-	go_scrapper "github.com/tkxkd0159/goutil/go-scrapper"
+	goscrapper "github.com/tkxkd0159/goutil/go-scrapper"
+	"log"
+	"os"
+	"path"
 )
 
 func main() {
@@ -11,31 +14,59 @@ func main() {
 	for {
 		lang := ""
 		pageLimit := 10
+		filename := "jobs.csv"
 
-		fmt.Println(" * Enter programming language which you are looking for")
+		fmt.Println(" > Enter programming language which you are looking for")
 		_, err := fmt.Scanln(&lang)
 		goutil.CheckErr(err, "", 1)
-		fmt.Println(" * Enter the number per page")
+		fmt.Println(" > Enter the number per page")
 		_, err = fmt.Scanln(&pageLimit)
+		goutil.CheckErr(err, "", 1)
+		fmt.Println(" > Enter the file name to save")
+		_, err = fmt.Scanln(&filename)
 		goutil.CheckErr(err, "", 1)
 
 		baseURL := "https://indeed.com"
 		target := fmt.Sprintf("%s/jobs?q=%s", baseURL, lang)
-		totalPages, _ := go_scrapper.GetPages(target)
 
-		for i := 0; i < totalPages; i++ {
-			go_scrapper.GetPage(target, i, pageLimit)
+		var pgnums []int
+		log.Println("==> aggregating page numbers...")
+		for i := 0; ; i++ {
+			url := goscrapper.GetJobURL(target, i, pageLimit)
+			if !goscrapper.CheckNext(url) {
+				pgnums = append(pgnums, i)
+				break
+			} else {
+				pgnums = append(pgnums, i)
+			}
+		}
+
+		log.Println("==> start to get job infos...")
+		var allJobs []goscrapper.JobInfo
+		tmpSave := make(chan []goscrapper.JobInfo, len(pgnums))
+		for _, pn := range pgnums {
+			go goscrapper.GetJobInfos(tmpSave, target, pn, pageLimit)
+		}
+
+		for _, _ = range pgnums {
+			allJobs = append(allJobs, <-tmpSave...)
+		}
+
+		goscrapper.WriteJobInfos(allJobs, path.Join(os.Getenv("HOME"), filename))
+
+		for {
+			var endSig string
+			fmt.Println(" > Do you wanna search another job positions (y/n)")
+			_, _ = fmt.Scanln(&endSig)
+			if endSig == "y" {
+				break
+			} else if endSig == "n" {
+				os.Exit(0)
+			} else {
+				fmt.Println("this is wrong input")
+			}
 		}
 
 	}
-
-	//testurl := "https://indeed.com/jobs?q=python&start=200&limit=50"
-	//res, _ := http.Get(testurl)
-	//defer res.Body.Close()
-	//addMore, _ := goquery.NewDocumentFromReader(res.Body)
-	//addMore.Find(".pagination > .pagination-list").Each(func(i int, s *goquery.Selection) {
-	//	fmt.Println(s.Find("[aria-label=\"Previous\"]").Length())
-	//	fmt.Println(s.Find("[aria-label=\"Next\"]").Length())
-	//})
 
 }

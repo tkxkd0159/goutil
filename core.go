@@ -3,6 +3,7 @@ package goutil
 import (
 	"fmt"
 	"log"
+	"strings"
 )
 
 func CheckErr(err error, msg string, action int) {
@@ -17,4 +18,8 @@ func CheckErr(err error, msg string, action int) {
 	case 1:
 		log.Printf("%s: \n %v", msg, err)
 	}
+}
+
+func CleanString(s string) string {
+	return strings.Join(strings.Fields(strings.TrimSpace(s)), " ")
 }
