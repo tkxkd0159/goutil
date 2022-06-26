@@ -67,48 +67,57 @@ func GetJobInfos(ch chan<- []JobInfo, baseURL string, pagenum int, pageLimit int
 	goutil.CheckErr(err, "", 1)
 
 	var infos []JobInfo
+	infoCh := make(chan JobInfo)
 
 	jobCards := doc.Find(".job_seen_beacon")
 	jobCards.Each(func(i int, s *goquery.Selection) {
-		var jkurl string
-		info := JobInfo{}
-
-		main := s.Find(".resultContent")
-
-		title, ok := main.Find("a > span").Attr("title")
-		if ok != true {
-			log.Println("there is no title attribute on this job card")
-		}
-		jkid, ok := main.Find("a").Attr("data-jk")
-		if ok != true {
-			log.Println("there is no data-jk attribute on this tag")
-		} else {
-			jkurl = fmt.Sprintf("https://indeed.com/viewjob?jk=%s", jkid)
-		}
-
-		company := main.Find(".companyInfo")
-		companyName := company.Find(".companyName > a").Text()
-		companyLoc := company.Find("div.companyLocation").Text()
-
-		metadata := main.Find(".metadataContainer")
-		salary := metadata.Find(".estimated-salary > span").Text()
-		jobType := metadata.Find("[aria-label='Job type']").Parent().Text()
-
-		info.Title = goutil.CleanString(title)
-		info.CompanyName = goutil.CleanString(companyName)
-		info.Location = goutil.CleanString(companyLoc)
-		info.Salary = goutil.CleanString(salary)
-		info.JobType = goutil.CleanString(jobType)
-		info.URL = goutil.CleanString(jkurl)
-
-		shelf := s.Find(".jobCardShelfContainer")
-		summary := shelf.Find(".underShelfFooter li").Text()
-		info.Summary = goutil.CleanString(summary)
-
-		infos = append(infos, info)
+		go extractJobInfoFromCard(infoCh, s)
 	})
 
+	for i := 0; i < jobCards.Length(); i++ {
+		infos = append(infos, <-infoCh)
+	}
+
 	ch <- infos
+}
+
+func extractJobInfoFromCard(c chan<- JobInfo, s *goquery.Selection) {
+	var jkurl string
+	info := JobInfo{}
+
+	main := s.Find(".resultContent")
+
+	title, ok := main.Find("a > span").Attr("title")
+	if ok != true {
+		log.Println("there is no title attribute on this job card")
+	}
+	jkid, ok := main.Find("a").Attr("data-jk")
+	if ok != true {
+		log.Println("there is no data-jk attribute on this tag")
+	} else {
+		jkurl = fmt.Sprintf("https://indeed.com/viewjob?jk=%s", jkid)
+	}
+
+	company := main.Find(".companyInfo")
+	companyName := company.Find(".companyName > a").Text()
+	companyLoc := company.Find("div.companyLocation").Text()
+
+	metadata := main.Find(".metadataContainer")
+	salary := metadata.Find(".estimated-salary > span").Text()
+	jobType := metadata.Find("[aria-label='Job type']").Parent().Text()
+
+	info.Title = goutil.CleanString(title)
+	info.CompanyName = goutil.CleanString(companyName)
+	info.Location = goutil.CleanString(companyLoc)
+	info.Salary = goutil.CleanString(salary)
+	info.JobType = goutil.CleanString(jobType)
+	info.URL = goutil.CleanString(jkurl)
+
+	shelf := s.Find(".jobCardShelfContainer")
+	summary := shelf.Find(".underShelfFooter li").Text()
+	info.Summary = goutil.CleanString(summary)
+
+	c <- info
 }
 
 func CheckNext(url string) bool {
