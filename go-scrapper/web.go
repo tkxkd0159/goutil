@@ -3,14 +3,16 @@ package go_scrapper
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
-	"github.com/tkxkd0159/goutil"
-	"github.com/tkxkd0159/goutil/web"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/PuerkitoBio/goquery"
+
+	io2 "github.com/tkxkd0159/goutil/io"
+	"github.com/tkxkd0159/goutil/web"
 )
 
 type JobInfo struct {
@@ -54,7 +56,7 @@ func GetJobURL(baseURL string, pagenum int, pageLimit int) string {
 func GetJobInfos(ch chan<- []JobInfo, baseURL string, pagenum int, pageLimit int) {
 	link := GetJobURL(baseURL, pagenum, pageLimit)
 	res, err := http.Get(link)
-	goutil.CheckErr(err, "", 1)
+	io2.CheckErr(err, "", 1)
 	web.CheckCode(res)
 
 	defer func(body io.ReadCloser) {
@@ -64,7 +66,7 @@ func GetJobInfos(ch chan<- []JobInfo, baseURL string, pagenum int, pageLimit int
 		}
 	}(res.Body)
 	doc, err := goquery.NewDocumentFromReader(res.Body)
-	goutil.CheckErr(err, "", 1)
+	io2.CheckErr(err, "", 1)
 
 	var infos []JobInfo
 	infoCh := make(chan JobInfo)
@@ -106,16 +108,16 @@ func extractJobInfoFromCard(c chan<- JobInfo, s *goquery.Selection) {
 	salary := metadata.Find(".estimated-salary > span").Text()
 	jobType := metadata.Find("[aria-label='Job type']").Parent().Text()
 
-	info.Title = goutil.CleanString(title)
-	info.CompanyName = goutil.CleanString(companyName)
-	info.Location = goutil.CleanString(companyLoc)
-	info.Salary = goutil.CleanString(salary)
-	info.JobType = goutil.CleanString(jobType)
-	info.URL = goutil.CleanString(jkurl)
+	info.Title = io2.CleanString(title)
+	info.CompanyName = io2.CleanString(companyName)
+	info.Location = io2.CleanString(companyLoc)
+	info.Salary = io2.CleanString(salary)
+	info.JobType = io2.CleanString(jobType)
+	info.URL = io2.CleanString(jkurl)
 
 	shelf := s.Find(".jobCardShelfContainer")
 	summary := shelf.Find(".underShelfFooter li").Text()
-	info.Summary = goutil.CleanString(summary)
+	info.Summary = io2.CleanString(summary)
 
 	c <- info
 }
@@ -123,7 +125,7 @@ func extractJobInfoFromCard(c chan<- JobInfo, s *goquery.Selection) {
 func CheckNext(url string) bool {
 	var isNext bool
 	res, err := http.Get(url)
-	goutil.CheckErr(err, "", 1)
+	io2.CheckErr(err, "", 1)
 	defer func(body io.ReadCloser) {
 		err := body.Close()
 		if err != nil {
@@ -143,16 +145,16 @@ func CheckNext(url string) bool {
 
 func WriteJobInfos(jobs []JobInfo, savepath string) {
 	err := os.MkdirAll(filepath.Dir(savepath), 0740)
-	goutil.CheckErr(err, "", 0)
+	io2.CheckErr(err, "", 0)
 
 	fp, err := os.Create(savepath)
-	goutil.CheckErr(err, "", 0)
+	io2.CheckErr(err, "", 0)
 	w := csv.NewWriter(fp)
 	defer w.Flush()
 
 	headers := []string{"Title", "Company name", "Location", "Salary", "Job type", "Sumamry", "URL"}
 	err = w.Write(headers)
-	goutil.CheckErr(err, "", 0)
+	io2.CheckErr(err, "", 0)
 
 	for _, job := range jobs {
 		s := []string{job.Title, job.CompanyName, job.Location, job.Salary, job.JobType, job.Summary, job.URL}

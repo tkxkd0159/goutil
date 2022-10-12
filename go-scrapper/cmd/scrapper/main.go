@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/tkxkd0159/goutil"
-	goscrapper "github.com/tkxkd0159/goutil/go-scrapper"
 	"log"
 	"os"
 	"path"
+
+	goscrapper "github.com/tkxkd0159/goutil/go-scrapper"
+	"github.com/tkxkd0159/goutil/io"
 )
 
 func main() {
@@ -18,13 +19,13 @@ func main() {
 
 		fmt.Println(" > Enter programming language which you are looking for")
 		_, err := fmt.Scanln(&lang)
-		goutil.CheckErr(err, "", 1)
+		io.CheckErr(err, "", 1)
 		fmt.Println(" > Enter the number per page")
 		_, err = fmt.Scanln(&pageLimit)
-		goutil.CheckErr(err, "", 1)
+		io.CheckErr(err, "", 1)
 		fmt.Println(" > Enter the file name to save")
 		_, err = fmt.Scanln(&filename)
-		goutil.CheckErr(err, "", 1)
+		io.CheckErr(err, "", 1)
 
 		baseURL := "https://indeed.com"
 		target := fmt.Sprintf("%s/jobs?q=%s", baseURL, lang)
