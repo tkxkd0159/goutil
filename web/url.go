@@ -23,7 +23,6 @@ func CheckURLs(urls []string) map[string]Resurl {
 
 		go func() {
 			res, err := http.Get(muURL)
-
 			if err != nil {
 				recvCh <- Resurl{URL: muURL, Err: err, Status: "", StatusCode: 0}
 				return

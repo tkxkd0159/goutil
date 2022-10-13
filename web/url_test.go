@@ -30,16 +30,20 @@ func TestCheckURLs(t *testing.T) {
 			"http://localhost",
 			"",
 			0,
-			&url.Error{Op: "Get", URL: "http://localhost",
+			&url.Error{
+				Op: "Get", URL: "http://localhost",
 				Err: &net.OpError{
 					Op:     "dial",
 					Net:    "tcp",
 					Source: nil,
-					Addr: &net.TCPAddr{IP: net.IP{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01},
-						Port: 80, Zone: ""},
+					Addr: &net.TCPAddr{
+						IP:   net.IP{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01},
+						Port: 80, Zone: "",
+					},
 					Err: &os.SyscallError{Syscall: "connect", Err: syscall.Errno(0x3d)},
 				},
-			}},
+			},
+		},
 	}
 
 	got := CheckURLs(tcs)
