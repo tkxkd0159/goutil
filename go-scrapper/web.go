@@ -12,6 +12,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 
 	io2 "github.com/tkxkd0159/goutil/io"
+	"github.com/tkxkd0159/goutil/str"
 	"github.com/tkxkd0159/goutil/web"
 )
 
@@ -108,16 +109,16 @@ func extractJobInfoFromCard(c chan<- JobInfo, s *goquery.Selection) {
 	salary := metadata.Find(".estimated-salary > span").Text()
 	jobType := metadata.Find("[aria-label='Job type']").Parent().Text()
 
-	info.Title = io2.CleanString(title)
-	info.CompanyName = io2.CleanString(companyName)
-	info.Location = io2.CleanString(companyLoc)
-	info.Salary = io2.CleanString(salary)
-	info.JobType = io2.CleanString(jobType)
-	info.URL = io2.CleanString(jkurl)
+	info.Title = str.CleanString(title)
+	info.CompanyName = str.CleanString(companyName)
+	info.Location = str.CleanString(companyLoc)
+	info.Salary = str.CleanString(salary)
+	info.JobType = str.CleanString(jobType)
+	info.URL = str.CleanString(jkurl)
 
 	shelf := s.Find(".jobCardShelfContainer")
 	summary := shelf.Find(".underShelfFooter li").Text()
-	info.Summary = io2.CleanString(summary)
+	info.Summary = str.CleanString(summary)
 
 	c <- info
 }

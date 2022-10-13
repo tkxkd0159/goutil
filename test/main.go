@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 )
 
 func main() {
-	a := 8
-	b := a >> 3
-	fmt.Println(b)
+	fmt.Println(runtime.NumCPU())
+	a := []int{2, 3}
+	fmt.Println(a[3:])
 }
