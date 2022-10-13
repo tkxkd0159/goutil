@@ -22,11 +22,12 @@ func CheckURLs(urls []string) map[string]Resurl {
 		muURL := url
 
 		go func() {
-			res, err := http.Get(muURL)
+			res, err := Get(muURL, nil)
 			if err != nil {
 				recvCh <- Resurl{URL: muURL, Err: err, Status: "", StatusCode: 0}
 				return
 			}
+			defer res.Body.Close()
 
 			if res.StatusCode > InfoSuccessUpperBound {
 				recvCh <- Resurl{URL: muURL, Status: res.Status, StatusCode: res.StatusCode, Err: nil}
