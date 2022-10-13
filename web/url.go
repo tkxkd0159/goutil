@@ -5,50 +5,48 @@ import (
 	"net/http"
 )
 
-type resurl struct {
+type Resurl struct {
 	URL        string
 	Status     string
 	StatusCode int
 	Err        error
 }
 
-func CheckURLs(urls []string) map[string]resurl {
-
+func CheckURLs(urls []string) map[string]Resurl {
 	total := len(urls)
 
-	ans := make(map[string]resurl)
-	recvCh := make(chan resurl, total)
+	ans := make(map[string]Resurl)
+	recvCh := make(chan Resurl, total)
 
 	for _, url := range urls {
 		muURL := url
+
 		go func() {
 			res, err := http.Get(muURL)
+
 			if err != nil {
-				recvCh <- resurl{URL: muURL, Err: err}
+				recvCh <- Resurl{URL: muURL, Err: err, Status: "", StatusCode: 0}
 				return
 			}
-			if res.StatusCode > 299 {
-				recvCh <- resurl{URL: muURL, Status: res.Status, StatusCode: res.StatusCode, Err: nil}
+
+			if res.StatusCode > InfoSuccessUpperBound {
+				recvCh <- Resurl{URL: muURL, Status: res.Status, StatusCode: res.StatusCode, Err: nil}
 				return
-
 			}
-			recvCh <- resurl{URL: muURL, Status: res.Status, StatusCode: res.StatusCode, Err: nil}
-
+			recvCh <- Resurl{URL: muURL, Status: res.Status, StatusCode: res.StatusCode, Err: nil}
 		}()
 	}
 
 	for i := 0; i < total; i++ {
-		select {
-		case got := <-recvCh:
-			ans[got.URL] = got
-		}
+		got := <-recvCh
+		ans[got.URL] = got
 	}
 
 	return ans
 }
 
 func CheckCode(res *http.Response) {
-	if res.StatusCode != 200 {
+	if res.StatusCode != OK {
 		log.Printf("ERROR : %d %s\n", res.StatusCode, res.Status)
 	}
 }

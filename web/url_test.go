@@ -2,12 +2,13 @@ package web
 
 import (
 	"errors"
-	"github.com/stretchr/testify/assert"
 	"net"
 	"net/url"
 	"os"
 	"syscall"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCheckURLs(t *testing.T) {
@@ -19,7 +20,7 @@ func TestCheckURLs(t *testing.T) {
 		"https://www.google.com",
 		"http://localhost",
 	}
-	expected := map[string]resurl{
+	expected := map[string]Resurl{
 		"https://naver.com":       {"https://naver.com", "200 OK", 200, nil},
 		"https://www.daum.net":    {"https://www.daum.net", "200 OK", 200, nil},
 		"https://www.example.com": {"https://www.example.com", "200 OK", 200, nil},
@@ -45,5 +46,4 @@ func TestCheckURLs(t *testing.T) {
 	for _, tc := range tcs {
 		assert.Equal(t, expected[tc], got[tc])
 	}
-
 }

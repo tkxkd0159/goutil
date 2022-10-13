@@ -7,6 +7,7 @@ import (
 
 func CheckErr(err error, msg string, action int) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	if err == nil {
 		return
 	}

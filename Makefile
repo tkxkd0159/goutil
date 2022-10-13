@@ -2,6 +2,8 @@ BUILD_DIR ?= $(CURDIR)/bin
 
 .PHONY: all build clean run
 
+all: lint build
+
 run:
 	@go run ./test/main.go
 
@@ -20,7 +22,7 @@ go.sum: go.mod
 	go mod tidy
 
 lint:
-	golangci-lint run --out-format=tab
+	golangci-lint run --out-format=tab ./...
 
 loc:
 	tokei .

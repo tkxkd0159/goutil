@@ -18,6 +18,7 @@ func TestIterList(t *testing.T) {
 		{1, 0},
 		{3, 0},
 	}
+
 	l.Append(1)
 	l.Append(2)
 	l.Append(3)
@@ -33,5 +34,6 @@ func TestIterList(t *testing.T) {
 		require.Equal(t, tc.elem, l.Get(tc.idx))
 		l.Delete(tc.idx)
 	}
+
 	require.Equal(t, &IterList[int]{size: 0, items: []int{}}, l)
 }
