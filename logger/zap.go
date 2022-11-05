@@ -20,7 +20,14 @@ const (
 	PROD
 )
 
+var l *zap.Logger
 var s *zap.SugaredLogger
+
+type ProdLoggerOpts struct {
+	Sample   *LogSamplerOpts
+	Logpath  string
+	Pathperm os.FileMode
+}
 
 type LogSamplerOpts struct {
 	Tick       time.Duration
@@ -30,23 +37,27 @@ type LogSamplerOpts struct {
 
 // SetLogger makes zap-based logger
 // Use filepath.Join to make logpath
-func SetLogger(m Mode, opts *LogSamplerOpts, logpath string, pathperm ...os.FileMode) {
+func SetLogger(m Mode, prodOpts ...ProdLoggerOpts) {
 	switch m {
 	case PROD:
+		if prodOpts == nil {
+			panic("you should set logger options for production mode")
+		}
+		opts := prodOpts[0]
 		encCfg := zap.NewProductionEncoderConfig()
 		enc := zapcore.NewJSONEncoder(encCfg)
 
-		if pathperm == nil {
-			MustMkDir(logpath, DefaultLogPathPerm)
+		if opts.Pathperm == 0 {
+			MustMkDir(opts.Logpath, DefaultLogPathPerm)
 		} else {
-			MustMkDir(logpath, pathperm[0])
+			MustMkDir(opts.Logpath, opts.Pathperm)
 		}
 
-		lowsink, _, err := zap.Open(filepath.Join(logpath, LowPriorityLogFileName))
+		lowsink, _, err := zap.Open(filepath.Join(opts.Logpath, LowPriorityLogFileName))
 		if err != nil {
 			panic(err)
 		}
-		highsink, _, err := zap.Open(filepath.Join(logpath, HighPriorityLogFileName))
+		highsink, _, err := zap.Open(filepath.Join(opts.Logpath, HighPriorityLogFileName))
 		if err != nil {
 			panic(err)
 		}
@@ -61,20 +72,32 @@ func SetLogger(m Mode, opts *LogSamplerOpts, logpath string, pathperm ...os.File
 			zapcore.NewCore(enc, lowsink, lowPriority),
 			zapcore.NewCore(enc, highsink, highPriority),
 		)
-		if opts == nil {
+		if opts.Sample == nil {
 			core = zapcore.NewSamplerWithOptions(core, DefaultLogTick, DefaultLogLogFirst, DefaultLogLogThereafter)
 		} else {
-			core = zapcore.NewSamplerWithOptions(core, opts.Tick, opts.First, opts.Thereafter)
+			core = zapcore.NewSamplerWithOptions(core, opts.Sample.Tick, opts.Sample.First, opts.Sample.Thereafter)
 		}
 		zapopts := []zap.Option{zap.AddCaller(), zap.AddStacktrace(zap.ErrorLevel)}
 		logger := zap.New(core, zapopts...)
+
+		l = logger
 		s = logger.Sugar()
 	case DEBUG:
 		logger, err := zap.NewDevelopment()
 		if err != nil {
 			panic(err)
 		}
+
+		l = logger
 		s = logger.Sugar()
+	}
+}
+
+func L() *zap.Logger {
+	if l == nil {
+		panic("you must set logger before run the fetcher")
+	} else {
+		return l
 	}
 }
 
