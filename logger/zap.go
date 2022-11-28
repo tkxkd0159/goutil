@@ -90,6 +90,10 @@ func SetLogger(m Mode, prodOpts ...ProdLoggerOpts) {
 
 		l = logger
 		s = logger.Sugar()
+	case TEST:
+		logger := zap.NewNop()
+		l = logger
+		s = logger.Sugar()
 	}
 }
 
